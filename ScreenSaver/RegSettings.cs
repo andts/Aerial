@@ -68,7 +68,13 @@ namespace Aerial
             key.SetValue(nameof(CacheLocation), CacheLocation);
             key.SetValue(nameof(ChosenMovies), ChosenMovies);
             key.SetValue(nameof(JsonURL), JsonURL);
-            key.SetValue(nameof(SettingsVersion), SettingsVersion);
+            // Every other value here is bool/enum/string, which SetValue(string, object)
+            // auto-detects as REG_SZ (via ToString()) - matching the "as string" read pattern
+            // used everywhere in this class. SettingsVersion is an int, which SetValue instead
+            // auto-detects as REG_DWORD: written that way, "as string" on read silently yields
+            // null, SettingsVersion would never advance past 0, and MigrateIfNeeded would refire
+            // (and wipe ChosenMovies) on every single launch instead of once. Force REG_SZ.
+            key.SetValue(nameof(SettingsVersion), SettingsVersion.ToString());
 
             // delete old keys
             key.DeleteValue(nameof(DifferentMoviesOnDual), throwOnMissingValue: false);
