@@ -202,6 +202,7 @@
     <EmbeddedResource Include="libs\AxInterop.WMPLib.dll" />
     <EmbeddedResource Include="libs\Interop.MediaPlayer.dll" />
     <EmbeddedResource Include="libs\Interop.WMPLib.dll" />
+    <EmbeddedResource Include="Videos.json" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">

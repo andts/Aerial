@@ -392,7 +392,7 @@ namespace ScreenSaver
             this.lbl_VideoSourceURL.Name = "lbl_VideoSourceURL";
             this.lbl_VideoSourceURL.Size = new System.Drawing.Size(279, 13);
             this.lbl_VideoSourceURL.TabIndex = 24;
-            this.lbl_VideoSourceURL.Text = "Video Source URL (change requires restart to take effect)";
+            this.lbl_VideoSourceURL.Text = "Video Source URL - leave empty to use the built-in catalog (change requires restart to take effect)";
             // 
             // changeVideoSourceText
             // 

@@ -46,13 +46,9 @@ namespace ScreenSaver
                 txtCacheFolderPath.Text = settings.CacheLocation;
             }
 
-            if (String.IsNullOrEmpty(settings.JsonURL))
-            {
-                changeVideoSourceText.Text = AerialGlobalVars.appleVideosURI;
-            } else
-            {
-                changeVideoSourceText.Text = settings.JsonURL;
-            }
+            // Empty means "use the bundled catalog" - leave the box empty rather than showing
+            // the old Apple feed URL, which is dead and is no longer the actual default.
+            changeVideoSourceText.Text = settings.JsonURL ?? "";
             
             changeCacheLocationButton.Enabled = settings.CacheVideos;
 
@@ -258,7 +254,9 @@ namespace ScreenSaver
 
         private void videoSourceResetButton_Click(object sender, EventArgs e)
         {
-            changeVideoSourceText.Text = AerialGlobalVars.appleVideosURI;
+            // Reset to the default, which is the bundled catalog (empty JsonURL), not the old
+            // (now dead) Apple feed URL.
+            changeVideoSourceText.Text = "";
         }
 
         private void SetToFourK_btn_Click(object sender, EventArgs e)

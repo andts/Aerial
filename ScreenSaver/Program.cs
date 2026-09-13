@@ -42,6 +42,7 @@ namespace Aerial
             Application.SetCompatibleTextRenderingDefault(false);
 
             Caching.Setup();
+            RegSettings.MigrateIfNeeded();
 
 
             if (args.Length > 0)
