@@ -1,8 +1,5 @@
-﻿using ScreenSaver;
+using ScreenSaver;
 using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 
 namespace Aerial
@@ -11,46 +8,39 @@ namespace Aerial
     {
         /// <summary>
         /// Arguments for any Windows 98+ screensaver:
-        /// 
+        ///
         ///   ScreenSaver.scr           - Show the Settings dialog box.
         ///   ScreenSaver.scr /c        - Show the Settings dialog box, modal to the foreground window.
-        ///   ScreenSaver.scr /p <HWND> - Preview Screen Saver as child of window <HWND>.
+        ///   ScreenSaver.scr /p &lt;HWND&gt; - Preview Screen Saver as child of window &lt;HWND&gt;.
         ///   ScreenSaver.scr /s        - Run the Screen Saver.
-        /// 
+        ///
         /// Custom arguments:
-        /// 
+        ///
         ///   ScreenSaver.scr /w        - Run in normal resizable window mode.
         ///   ScreenSaver.exe           - Run in normal resizable window mode.
+        ///
+        /// Playback modes (/s, /p, /w) run on a WPF message loop via AerialApp; the settings
+        /// dialog is still WinForms and runs on the WinForms loop. The two are never started
+        /// together - only one pump per process.
         /// </summary>
         /// <param name="args"></param>
         [STAThread]
         static void Main(string[] args)
         {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, dll) =>
-            {
-                var resName = "Aerial.libs." + dll.Name.Split(',')[0] + ".dll";
-                var thisAssembly = Assembly.GetExecutingAssembly();
-                using (var input = thisAssembly.GetManifestResourceStream(resName))
-                {
-                    return input != null
-                         ? Assembly.Load(StreamToBytes(input))
-                         : null;
-                }
-            };
-
+            // Needed for the WinForms settings dialog, including when it is opened from the
+            // screensaver's gear button while WPF owns the message loop.
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
             Caching.Setup();
             RegSettings.MigrateIfNeeded();
 
-
             if (args.Length > 0)
             {
                 string firstArgument = args[0].ToLower().Trim();
                 string secondArgument = null;
 
-                // Handle cases where arguments are separated by colon. 
+                // Handle cases where arguments are separated by colon.
                 // Examples: /c:1234567 or /P:1234567
                 if (firstArgument.Length > 2)
                 {
@@ -59,12 +49,10 @@ namespace Aerial
                 }
                 else if (args.Length > 1)
                     secondArgument = args[1];
-                
+
                 if (firstArgument == "/c")           // Configuration mode
                 {
-                    var settings = new SettingsForm();
-                    settings.StartPosition = FormStartPosition.CenterScreen;
-                    Application.Run(settings);
+                    ShowSettings();
                 }
                 else if (firstArgument == "/p")      // Preview mode
                 {
@@ -74,17 +62,24 @@ namespace Aerial
                             "ScreenSaver", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                         return;
                     }
-                    
-                    IntPtr previewWndHandle = new IntPtr(long.Parse(secondArgument));
-                    Application.Run(new ScreenSaverForm(previewWndHandle));
+
+                    long handle;
+                    if (!long.TryParse(secondArgument, out handle))
+                    {
+                        MessageBox.Show("Sorry, but \"" + secondArgument +
+                            "\" is not a valid window handle.", "ScreenSaver",
+                            MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return;
+                    }
+
+                    AerialApp.RunPreview(new IntPtr(handle));
                 }
                 else if (firstArgument == "/s")      // Full-screen mode
                 {
-                    ShowScreenSaver();
-                    Application.Run();
+                    AerialApp.RunScreenSaver();
                 }  else if (firstArgument == "/w") // if executable, windowed mode.
                 {
-                    Application.Run(new ScreenSaverForm(WindowMode: true));
+                    AerialApp.RunWindowed();
                 }
                 else    // Undefined argument
                 {
@@ -93,71 +88,29 @@ namespace Aerial
                         MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
-            else    
+            else
             {
                 if (System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName.EndsWith("exe")) // treat like /w
                 {
-                    Application.Run(new ScreenSaverForm(WindowMode: true));
+                    AerialApp.RunWindowed();
                 }
                 else // No arguments - treat like /c
                 {
-                    Application.Run(new SettingsForm());
+                    ShowSettings();
                 }
-            }            
-        }
-
-        static byte[] StreamToBytes(Stream input)
-        {
-            var capacity = input.CanSeek ? (int)input.Length : 0;
-            using (var output = new MemoryStream(capacity))
-            {
-                int readLength;
-                var buffer = new byte[4096];
-
-                do
-                {
-                    readLength = input.Read(buffer, 0, buffer.Length);
-                    output.Write(buffer, 0, readLength);
-                }
-                while (readLength != 0);
-
-                return output.ToArray();
             }
         }
 
         /// <summary>
-        /// Display the form on each of the computer's monitors.
+        /// Runs the settings dialog on the WinForms message loop. No WPF Application is created
+        /// in this mode; the dialog's video preview is hosted through ElementHost, which does not
+        /// need one.
         /// </summary>
-        static void ShowScreenSaver()
+        private static void ShowSettings()
         {
-            var multiMonitorMode = new RegSettings().MultiMonitorMode;
-
-            switch (multiMonitorMode)
-            {
-                case RegSettings.MultiMonitorModeEnum.SameOnEach:
-                case RegSettings.MultiMonitorModeEnum.DifferentVideos:
-                    {
-                        foreach (var screen in Screen.AllScreens)
-                        {
-                            new ScreenSaverForm(screen.Bounds, shouldCache: screen.Primary, showVideo: true).Show();
-                        }
-                        break;
-                    }
-                case RegSettings.MultiMonitorModeEnum.SpanAll:
-                    {
-                        new ScreenSaverForm(Screen.AllScreens.GetBounds(), shouldCache: true, showVideo: true).Show();
-                        break;
-                    }
-                case RegSettings.MultiMonitorModeEnum.MainOnly:
-                default:
-                    {
-                        foreach (var screen in Screen.AllScreens)
-                        {
-                            new ScreenSaverForm(screen.Bounds, shouldCache: screen.Primary, showVideo: screen.Primary).Show();
-                        }
-                        break;
-                    }
-            }
+            var settings = new SettingsForm();
+            settings.StartPosition = FormStartPosition.CenterScreen;
+            Application.Run(settings);
         }
     }
 }

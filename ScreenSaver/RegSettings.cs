@@ -13,6 +13,7 @@ namespace Aerial
         [Obsolete("Replaced with MultiMonitorMode")]
         private bool MultiscreenDisabled = true;
         public MultiMonitorModeEnum MultiMonitorMode = RegSettings.MultiMonitorModeEnum.MainOnly;
+        public VideoQualityEnum VideoQuality = RegSettings.VideoQualityEnum.H264_1080p;
         public bool UseTimeOfDay = true;
         public bool CacheVideos = true;
         public string CacheLocation = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Aerial");
@@ -46,6 +47,9 @@ namespace Aerial
                         : DifferentMoviesOnDual ? MultiMonitorModeEnum.DifferentVideos : MultiMonitorModeEnum.SameOnEach;
                 }
 
+                if (!Enum.TryParse(key.GetValue(nameof(VideoQuality)) as string, out VideoQuality))
+                    VideoQuality = VideoQualityEnum.H264_1080p;
+
                 UseTimeOfDay = bool.Parse(key.GetValue(nameof(UseTimeOfDay)) as string ?? "True");
                 CacheVideos = bool.Parse(key.GetValue(nameof(CacheVideos)) as string ?? "True");
                 CacheLocation = key.GetValue(nameof(CacheLocation)) as string;
@@ -63,6 +67,10 @@ namespace Aerial
             RegistryKey key = Registry.CurrentUser.CreateSubKey(keyAddress);
 
             key.SetValue(nameof(MultiMonitorMode), MultiMonitorMode);
+            // Enums serialise through ToString() to REG_SZ, which is what the "as string" reads
+            // above expect - unlike int, which SetValue would store as REG_DWORD (see
+            // SettingsVersion below).
+            key.SetValue(nameof(VideoQuality), VideoQuality);
             key.SetValue(nameof(UseTimeOfDay), UseTimeOfDay);
             key.SetValue(nameof(CacheVideos), CacheVideos);
             key.SetValue(nameof(CacheLocation), CacheLocation);
@@ -139,8 +147,8 @@ namespace Aerial
         }
 
         /// <summary>
-        /// Which encoding/resolution to play. Not yet exposed in the UI or persisted as its own
-        /// setting - see Asset.ResolveUrl and the porting plan's Step 5.
+        /// Which encoding/resolution to play. Resolved per asset by Asset.ResolveUrl; the three
+        /// encodings have distinct filenames, so switching quality never invalidates the cache.
         /// </summary>
         public enum VideoQualityEnum
         {

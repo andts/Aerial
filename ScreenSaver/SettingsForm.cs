@@ -12,6 +12,8 @@ namespace ScreenSaver
 {
     public partial class SettingsForm : Form
     {
+        private Aerial.VideoSurface previewSurface;
+
         public SettingsForm()
         {
             InitializeComponent();
@@ -36,6 +38,7 @@ namespace ScreenSaver
             //chkMultiscreenDisabled.Checked = settings.MultiscreenDisabled;
             chkCacheVideos.Checked = settings.CacheVideos;
             cbMultiScreenMode.DataBindEnum(settings.MultiMonitorMode);
+            cbVideoQuality.DataBindEnum(settings.VideoQuality);
 
             if (settings.CacheLocation == null || settings.CacheLocation == "")
             {
@@ -61,11 +64,11 @@ namespace ScreenSaver
 
         private void InitPlayer()
         {
-            this.player.enableContextMenu = false;
-            this.player.settings.autoStart = true;
-            this.player.settings.enableErrorDialogs = true;
-            this.player.stretchToFit = true;
-            this.player.uiMode = "none";
+            // The WPF video surface lives inside a WinForms ElementHost. None of the old WMP
+            // setup survives: MediaElement has no context menu, no chrome and no error dialogs.
+            previewSurface = new Aerial.VideoSurface(enableCrossfade: false,
+                                                    crossfadeDuration: TimeSpan.Zero);
+            playerHost.Child = previewSurface;
         }
 
 
@@ -86,8 +89,11 @@ namespace ScreenSaver
             Trace.WriteLine("Selected tree element " + e.Node.FullPath);
             if (cbLivePreview.Checked && e.Node.FullPath.Contains("\\"))
             {
-                string url = tvChosen.GetUrl(e.Node.FullPath);
-                player.URL = Caching.TryHit(url);
+                var quality = cbVideoQuality.SelectedValue is RegSettings.VideoQualityEnum
+                    ? (RegSettings.VideoQualityEnum)cbVideoQuality.SelectedValue
+                    : new RegSettings().VideoQuality;
+                string url = tvChosen.GetUrl(e.Node.FullPath, quality);
+                previewSurface.PlaySingle(Caching.TryHit(url));
             }
         }
 
@@ -149,6 +155,7 @@ namespace ScreenSaver
         {
             var settings = new RegSettings();
             settings.MultiMonitorMode = (RegSettings.MultiMonitorModeEnum)cbMultiScreenMode.SelectedValue;
+            settings.VideoQuality = (RegSettings.VideoQualityEnum)cbVideoQuality.SelectedValue;
             settings.UseTimeOfDay = chkUseTimeOfDay.Checked;
             settings.CacheVideos = chkCacheVideos.Checked;
 
@@ -259,10 +266,6 @@ namespace ScreenSaver
             changeVideoSourceText.Text = "";
         }
 
-        private void SetToFourK_btn_Click(object sender, EventArgs e)
-        {
-            changeVideoSourceText.Text = AerialGlobalVars.applefourKVideoURI;
-        }
 
         private void fullDownloadBtn_Click(object sender, EventArgs e)
         {
@@ -270,7 +273,11 @@ namespace ScreenSaver
 
 
             var cacheFree = NativeMethods.GetExplorerFileSize(Caching.CacheSpace());
-            if (MessageBox.Show("Downloading all videos may take over 10GB of space, do you want to procede? " +
+            // 4K files are several times larger, so the old flat "over 10GB" figure understated it badly.
+            var quality = (RegSettings.VideoQualityEnum)cbVideoQuality.SelectedValue;
+            var estimate = quality == RegSettings.VideoQualityEnum.Hevc4k ? "40GB" : "10GB";
+            if (MessageBox.Show("Downloading all videos at the selected quality may take over " + estimate +
+                                " of space, do you want to proceed? " +
                                 "(You currently have " + cacheFree + " of space free)", "Download?", MessageBoxButtons.YesNo) != DialogResult.Yes)
             {
                 //don't download if user cancels
@@ -281,13 +288,17 @@ namespace ScreenSaver
             {
                 foreach (var movie in movies)
                 {
-                    if (!Caching.IsHit(movie.url))
+                    // Cache the encoding that will actually be played, not always the H.264 one.
+                    var url = movie.ResolveUrl(quality);
+                    if (string.IsNullOrWhiteSpace(url)) continue;
+
+                    if (!Caching.IsHit(url))
                     {
-                        Caching.StartDelayedCache(movie.url);
-                        Trace.WriteLine("Downloading " + movie.url);
+                        Caching.StartDelayedCache(url);
+                        Trace.WriteLine("Downloading " + url);
                     } else
                     {
-                        Trace.WriteLine(movie.url + " is already cached");
+                        Trace.WriteLine(url + " is already cached");
                     }
                 }
             } catch (WebException err)

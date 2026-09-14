@@ -1,4 +1,4 @@
-namespace ScreenSaver
+﻿namespace ScreenSaver
 {
     partial class SettingsForm
     {
@@ -39,7 +39,7 @@ namespace ScreenSaver
             this.grpChosenVideos = new System.Windows.Forms.GroupBox();
             this.tvChosen = new Aerial.Controls.EntitiesTreeView();
             this.cbLivePreview = new System.Windows.Forms.CheckBox();
-            this.player = new AxWMPLib.AxWindowsMediaPlayer();
+            this.playerHost = new System.Windows.Forms.Integration.ElementHost();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.chkUseTimeOfDay = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -56,7 +56,9 @@ namespace ScreenSaver
             this.changeCacheLocationButton = new System.Windows.Forms.Button();
             this.txtCacheFolderPath = new System.Windows.Forms.TextBox();
             this.tabSource = new System.Windows.Forms.TabPage();
-            this.SetToFourK_btn = new System.Windows.Forms.Button();
+            this.lblVideoQuality = new System.Windows.Forms.Label();
+            this.cbVideoQuality = new System.Windows.Forms.ComboBox();
+            this.lblHevcWarning = new System.Windows.Forms.Label();
             this.videoSourceResetButton = new System.Windows.Forms.Button();
             this.lbl_VideoSourceURL = new System.Windows.Forms.Label();
             this.changeVideoSourceText = new System.Windows.Forms.TextBox();
@@ -65,7 +67,6 @@ namespace ScreenSaver
             this.tabs.SuspendLayout();
             this.tabPreferences.SuspendLayout();
             this.grpChosenVideos.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.player)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.tabCache.SuspendLayout();
@@ -142,7 +143,7 @@ namespace ScreenSaver
             // 
             this.grpChosenVideos.Controls.Add(this.tvChosen);
             this.grpChosenVideos.Controls.Add(this.cbLivePreview);
-            this.grpChosenVideos.Controls.Add(this.player);
+            this.grpChosenVideos.Controls.Add(this.playerHost);
             this.grpChosenVideos.Controls.Add(this.pictureBox1);
             this.grpChosenVideos.Controls.Add(this.chkUseTimeOfDay);
             this.grpChosenVideos.Location = new System.Drawing.Point(7, 75);
@@ -176,14 +177,13 @@ namespace ScreenSaver
             this.cbLivePreview.Text = "Live Preview";
             this.cbLivePreview.UseVisualStyleBackColor = true;
             // 
-            // player
+            // playerHost
             // 
-            this.player.Enabled = true;
-            this.player.Location = new System.Drawing.Point(151, 19);
-            this.player.Name = "player";
-            this.player.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("player.OcxState")));
-            this.player.Size = new System.Drawing.Size(232, 132);
-            this.player.TabIndex = 16;
+            this.playerHost.Location = new System.Drawing.Point(151, 19);
+            this.playerHost.Name = "playerHost";
+            this.playerHost.Size = new System.Drawing.Size(232, 132);
+            this.playerHost.TabIndex = 16;
+            this.playerHost.Child = null;
             // 
             // pictureBox1
             // 
@@ -350,7 +350,9 @@ namespace ScreenSaver
             // 
             // tabSource
             // 
-            this.tabSource.Controls.Add(this.SetToFourK_btn);
+            this.tabSource.Controls.Add(this.lblVideoQuality);
+            this.tabSource.Controls.Add(this.cbVideoQuality);
+            this.tabSource.Controls.Add(this.lblHevcWarning);
             this.tabSource.Controls.Add(this.videoSourceResetButton);
             this.tabSource.Controls.Add(this.lbl_VideoSourceURL);
             this.tabSource.Controls.Add(this.changeVideoSourceText);
@@ -362,16 +364,33 @@ namespace ScreenSaver
             this.tabSource.Text = "Video Source";
             this.tabSource.UseVisualStyleBackColor = true;
             // 
-            // SetToFourK_btn
+            // lblVideoQuality
             // 
-            this.SetToFourK_btn.Location = new System.Drawing.Point(248, 60);
-            this.SetToFourK_btn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.SetToFourK_btn.Name = "SetToFourK_btn";
-            this.SetToFourK_btn.Size = new System.Drawing.Size(140, 22);
-            this.SetToFourK_btn.TabIndex = 26;
-            this.SetToFourK_btn.Text = "Set to 4k Video";
-            this.SetToFourK_btn.UseVisualStyleBackColor = true;
-            this.SetToFourK_btn.Click += new System.EventHandler(this.SetToFourK_btn_Click);
+            this.lblVideoQuality.AutoSize = true;
+            this.lblVideoQuality.Location = new System.Drawing.Point(9, 97);
+            this.lblVideoQuality.Name = "lblVideoQuality";
+            this.lblVideoQuality.Size = new System.Drawing.Size(70, 13);
+            this.lblVideoQuality.TabIndex = 26;
+            this.lblVideoQuality.Text = "Video quality";
+            // 
+            // cbVideoQuality
+            // 
+            this.cbVideoQuality.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbVideoQuality.FormattingEnabled = true;
+            this.cbVideoQuality.Location = new System.Drawing.Point(11, 115);
+            this.cbVideoQuality.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.cbVideoQuality.Name = "cbVideoQuality";
+            this.cbVideoQuality.Size = new System.Drawing.Size(377, 21);
+            this.cbVideoQuality.TabIndex = 27;
+            // 
+            // lblHevcWarning
+            // 
+            this.lblHevcWarning.Location = new System.Drawing.Point(9, 141);
+            this.lblHevcWarning.Name = "lblHevcWarning";
+            this.lblHevcWarning.Size = new System.Drawing.Size(379, 32);
+            this.lblHevcWarning.TabIndex = 28;
+            this.lblHevcWarning.Text = "HEVC needs the HEVC Video Extensions codec from the Microsoft Store. If video is b" +
+    "lack or does not start, switch back to 1080p (H.264).";
             // 
             // videoSourceResetButton
             // 
@@ -441,7 +460,6 @@ namespace ScreenSaver
             this.tabPreferences.ResumeLayout(false);
             this.grpChosenVideos.ResumeLayout(false);
             this.grpChosenVideos.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.player)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.tabCache.ResumeLayout(false);
@@ -473,7 +491,7 @@ namespace ScreenSaver
         private System.Windows.Forms.Label lblFreeSpace;
         private System.Windows.Forms.Button btnPurgeCache;
         private System.Windows.Forms.Label lblCacheSize;
-        private AxWMPLib.AxWindowsMediaPlayer player;
+        private System.Windows.Forms.Integration.ElementHost playerHost;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.CheckBox cbLivePreview;
         private System.Windows.Forms.Timer timerDiskUpdate;
@@ -484,7 +502,9 @@ namespace ScreenSaver
         private System.Windows.Forms.TextBox changeVideoSourceText;
         private System.Windows.Forms.Button fullDownloadBtn;
         private System.Windows.Forms.Label numOfCurrDown_lbl;
-        private System.Windows.Forms.Button SetToFourK_btn;
+        private System.Windows.Forms.Label lblVideoQuality;
+        private System.Windows.Forms.ComboBox cbVideoQuality;
+        private System.Windows.Forms.Label lblHevcWarning;
         private System.Windows.Forms.ComboBox cbMultiScreenMode;
     }
 }
