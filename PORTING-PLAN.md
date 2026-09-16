@@ -1,7 +1,25 @@
 # Porting Plan: Refresh the Video Catalog and Harden Playback
 
-Status: **proposed, not yet implemented**
-Scope: steps 1–5 below. Each step is independently shippable and listed in dependency order.
+Status: **partially implemented.** Steps 1, 4 and 5 are done; steps 2 and 3 are still open.
+
+## Implementation status
+
+| Step | Status | Notes |
+| --- | --- | --- |
+| 1 — Bundled catalog | **Done** | As planned: `Videos.json` embedded, remote URL optional with bundled fallback, dead defaults migrated, labels fall back to category. |
+| 2 — `RegSettings` null defaults | **Open** (partly mitigated) | The constructor still has no fallback for `CacheLocation` / `JsonURL`. `MigrateIfNeeded` fills both in once for installs older than settings version 1, which covers the upgrade path, but `bool.Parse` on corrupt values is still unguarded. |
+| 3 — Download queue, cache relocation | **Open** | `StartDelayedCache` still starts every download independently, `Directory.Move` is still used, and `UpdateCachePath` / `DeleteCache` are still `async void`. |
+| 4 — Skip failed videos | **Done, differently** | Implemented after playback moved from the WMP ActiveX control to WPF `MediaElement`, so the WMP-specific code below no longer applies. The logic lives in `PlaybackController` (UI-free, tested by `tools/verify`), and `VideoSurface` handles `MediaFailed`, the 30-second stall timeout and cached-file retry. `AerialApp.ShowFatalOnce` shows a single dialog. |
+| 5 — Video quality selector | **Done** | As planned, with the "Download all" size warning adjusted per quality. |
+
+Beyond this plan, the WPF migration also delivered two items listed below as out of scope:
+crossfades between clips, and correct placement on mixed-DPI monitors. On-screen text overlays
+are still not implemented. The WPF work also moved the project to .NET Framework 4.8 and a
+64-bit build, and added a software-rendering setting. The file references in the rest of this
+document (`ScreenSaverForm.cs`, `libs/`, WMP interop, line numbers) describe the codebase
+**before** that work and are kept as the historical plan.
+
+---
 
 This plan is written to be executed by someone (or something) with no prior context on this
 repository. Read the "Orientation" section first; every later section assumes it.

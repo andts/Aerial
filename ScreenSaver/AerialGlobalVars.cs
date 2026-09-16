@@ -14,9 +14,9 @@ namespace Aerial
     static class AerialGlobalVars
     {
         // URL for the JSON document that describes the latest github release
-        public static string githubLatestReleaseDetails = "https://api.github.com/repos/cdima/aerial/releases/latest";
+        public static string githubLatestReleaseDetails = "https://api.github.com/repos/andts/Aerial/releases/latest";
         //Link to the github releases page
-        public static string githubAllReleases = "https://github.com/cDima/Aerial/releases";
+        public static string githubAllReleases = "https://github.com/andts/Aerial/releases";
         // Both URLs below are dead/near-empty as of 2026 and are no longer used as defaults - the
         // app ships a bundled catalog instead (see AerialContext.GetAllEntries and Videos.json).
         // They are kept only so RegSettings.MigrateIfNeeded can recognize and clear them from an
