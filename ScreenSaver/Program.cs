@@ -35,6 +35,11 @@ namespace Aerial
             Caching.Setup();
             RegSettings.MigrateIfNeeded();
 
+            // Process-wide, so it covers every screensaver window, the /p preview and the settings
+            // preview alike. Must be set before any WPF window or HwndSource is created.
+            if (new RegSettings().SoftwareRendering)
+                System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+
             if (args.Length > 0)
             {
                 string firstArgument = args[0].ToLower().Trim();

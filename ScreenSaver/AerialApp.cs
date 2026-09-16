@@ -124,6 +124,19 @@ namespace Aerial
             else Forms.Application.Exit();
         }
 
+        /// <summary>Advances the video on every screensaver window, not just the focused one.</summary>
+        internal static void SkipAllToNext()
+        {
+            var current = Application.Current;
+            if (current == null) return;
+
+            foreach (Window window in current.Windows)
+            {
+                var screenSaver = window as ScreenSaverWindow;
+                if (screenSaver != null) screenSaver.SkipToNext();
+            }
+        }
+
         /// <summary>
         /// Shows an error at most once for the whole process. Without this, a four-monitor setup
         /// produced four stacked dialogs behind a topmost window.

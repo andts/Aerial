@@ -16,6 +16,9 @@ namespace Aerial
         public VideoQualityEnum VideoQuality = RegSettings.VideoQualityEnum.H264_1080p;
         public bool UseTimeOfDay = true;
         public bool CacheVideos = true;
+        // WPF draws video on the CPU. Works around a ~5s freeze at clip start that WPF's hardware
+        // video path shows on some multi-monitor setups, at a clear CPU cost. See AerialApp.
+        public bool SoftwareRendering = false;
         public string CacheLocation = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Aerial");
         public string ChosenMovies = "";
         // Empty means: use the video catalog bundled with the app (see AerialContext.GetAllEntries).
@@ -52,6 +55,7 @@ namespace Aerial
 
                 UseTimeOfDay = bool.Parse(key.GetValue(nameof(UseTimeOfDay)) as string ?? "True");
                 CacheVideos = bool.Parse(key.GetValue(nameof(CacheVideos)) as string ?? "True");
+                SoftwareRendering = bool.Parse(key.GetValue(nameof(SoftwareRendering)) as string ?? "False");
                 CacheLocation = key.GetValue(nameof(CacheLocation)) as string;
                 ChosenMovies = (key.GetValue(nameof(ChosenMovies)) as string ?? "");
                 JsonURL = key.GetValue(nameof(JsonURL)) as string;
@@ -73,6 +77,7 @@ namespace Aerial
             key.SetValue(nameof(VideoQuality), VideoQuality);
             key.SetValue(nameof(UseTimeOfDay), UseTimeOfDay);
             key.SetValue(nameof(CacheVideos), CacheVideos);
+            key.SetValue(nameof(SoftwareRendering), SoftwareRendering);
             key.SetValue(nameof(CacheLocation), CacheLocation);
             key.SetValue(nameof(ChosenMovies), ChosenMovies);
             key.SetValue(nameof(JsonURL), JsonURL);

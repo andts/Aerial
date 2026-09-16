@@ -37,6 +37,7 @@ namespace ScreenSaver
             chkUseTimeOfDay.Checked = settings.UseTimeOfDay;
             //chkMultiscreenDisabled.Checked = settings.MultiscreenDisabled;
             chkCacheVideos.Checked = settings.CacheVideos;
+            chkSoftwareRendering.Checked = settings.SoftwareRendering;
             cbMultiScreenMode.DataBindEnum(settings.MultiMonitorMode);
             cbVideoQuality.DataBindEnum(settings.VideoQuality);
 
@@ -57,9 +58,11 @@ namespace ScreenSaver
 
             ShowSpace();
 
-            PopulateChosenVideoGroup();
-
+            // The player must exist first: building the tree selects a node, which fires
+            // tvChosen_AfterSelect and starts a preview.
             InitPlayer();
+
+            PopulateChosenVideoGroup();
         }
 
         private void InitPlayer()
@@ -158,6 +161,7 @@ namespace ScreenSaver
             settings.VideoQuality = (RegSettings.VideoQualityEnum)cbVideoQuality.SelectedValue;
             settings.UseTimeOfDay = chkUseTimeOfDay.Checked;
             settings.CacheVideos = chkCacheVideos.Checked;
+            settings.SoftwareRendering = chkSoftwareRendering.Checked;
 
             string oldCacheDirectory = settings.CacheLocation;
             settings.CacheLocation = txtCacheFolderPath.Text;

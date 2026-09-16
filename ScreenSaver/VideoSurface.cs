@@ -169,7 +169,7 @@ namespace Aerial
         internal void PlaySingle(string url)
         {
             Uri uri;
-            if (!Uri.TryCreate(url, UriKind.Absolute, out uri)) return;
+            if (!TryCreateMediaUri(url, out uri)) return;
 
             pendingUrl = null;
             pendingReady = false;
@@ -218,7 +218,7 @@ namespace Aerial
             }
 
             Uri uri;
-            if (!Uri.TryCreate(controller.CurrentUrl, UriKind.Absolute, out uri))
+            if (!TryCreateMediaUri(controller.CurrentUrl, out uri))
             {
                 // Unusable url - tell the controller so it stops offering it, then try again.
                 controller.NotifyFailed(controller.CurrentUrl, PlaybackFailure.LoadFailed);
@@ -245,7 +245,7 @@ namespace Aerial
             if (controller == null || !controller.MoveNext()) return;
 
             Uri uri;
-            if (!Uri.TryCreate(controller.CurrentUrl, UriKind.Absolute, out uri))
+            if (!TryCreateMediaUri(controller.CurrentUrl, out uri))
             {
                 controller.NotifyFailed(controller.CurrentUrl, PlaybackFailure.LoadFailed);
                 return;
@@ -319,6 +319,27 @@ namespace Aerial
             fading = false;
         }
 
+        /// <summary>
+        /// Builds the Uri handed to a MediaElement. https sources are downgraded to http because
+        /// .NET Framework WPF cannot stream https at all: MediaPlayerState.OpenMedia dereferences
+        /// the ClickOnce site of origin for https URIs and throws NullReferenceException outside a
+        /// ClickOnce deployment, and even with that bypassed the native WMP-based pipeline hangs
+        /// on https. The caller keeps the original url for bookkeeping; cache downloads go through
+        /// WebClient and stay on https.
+        /// </summary>
+        private static bool TryCreateMediaUri(string url, out Uri uri)
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out uri)) return false;
+
+            if (uri.Scheme == Uri.UriSchemeHttps)
+            {
+                var builder = new UriBuilder(uri) { Scheme = Uri.UriSchemeHttp };
+                if (uri.IsDefaultPort) builder.Port = -1;
+                uri = builder.Uri;
+            }
+            return true;
+        }
+
         private static void StopPlayer(MediaElement player)
         {
             try
@@ -343,7 +364,6 @@ namespace Aerial
             if (stopped || controller == null) return;
 
             var position = SafePosition(current);
-
             // Real forward progress resets the stall clock. Buffering deliberately does not.
             if (position - lastPosition > TimeSpan.FromMilliseconds(250))
             {
@@ -385,8 +405,7 @@ namespace Aerial
         private void OnMediaOpened(object sender, RoutedEventArgs e)
         {
             var player = (MediaElement)sender;
-            var url = player.Tag as string;
-            if (url == null) return;
+            var url = player.Tag as string;            if (url == null) return;
 
             if (url == currentUrl)
             {

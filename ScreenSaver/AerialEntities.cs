@@ -17,6 +17,11 @@ namespace Aerial
         static IdAsset[] cachedEntities;
         static List<Asset> cachedPlaylist;
 
+        // Shared: .NET Framework seeds `new Random()` from the tick count, so windows created in
+        // the same tick got identical shuffles and "different videos" showed the same clip.
+        // Only used from the UI thread.
+        static readonly Random shuffle = new Random();
+
         public static List<Asset> GetMovies()
         {
             var urls = GetAllEntries();
@@ -36,19 +41,19 @@ namespace Aerial
             if (urls == null) { return new List<Asset>(); }; //if no URLS, return an empty list
 
             var time = (DateTime.Now.Hour < 6 || DateTime.Now.Hour > 19) ? "night" : "day";
-            var ran = new Random();
             var settings = new RegSettings();
-            List<Asset> links = urls.SelectMany(s => s.assets)
-                .Where(t => AssetSelected(t)) //only return videos that have been selected to be played
-                .OrderBy(t => ran.Next()) // randomize
+            var all = urls.SelectMany(s => s.assets).ToList();
+            var selected = all.Where(t => AssetSelected(t)).ToList(); //only videos selected to be played
+
+            //If nothing matches the selection (e.g. ChosenMovies saved as ";"), play all movies.
+            //The fallback must still go through the shuffle below, or every window plays the
+            //catalog in alphabetical order.
+            if (selected.Count == 0) selected = all;
+
+            List<Asset> links = selected
+                .OrderBy(t => shuffle.Next()) // randomize
                 .OrderByDescending(t => settings.UseTimeOfDay && t.timeOfDay == time)
                 .ToList();
-
-            //If the links list is empty or null for some reason, just populate with all movies
-            if (links == null || links.Count == 0)
-            {
-                links = urls.SelectMany(s => s.assets).ToList();
-            }
 
             if (settings.MultiMonitorMode == RegSettings.MultiMonitorModeEnum.DifferentVideos)
                 return links;

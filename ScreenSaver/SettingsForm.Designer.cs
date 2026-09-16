@@ -59,6 +59,8 @@
             this.lblVideoQuality = new System.Windows.Forms.Label();
             this.cbVideoQuality = new System.Windows.Forms.ComboBox();
             this.lblHevcWarning = new System.Windows.Forms.Label();
+            this.chkSoftwareRendering = new System.Windows.Forms.CheckBox();
+            this.lblSoftwareRendering = new System.Windows.Forms.Label();
             this.videoSourceResetButton = new System.Windows.Forms.Button();
             this.lbl_VideoSourceURL = new System.Windows.Forms.Label();
             this.changeVideoSourceText = new System.Windows.Forms.TextBox();
@@ -353,6 +355,8 @@
             this.tabSource.Controls.Add(this.lblVideoQuality);
             this.tabSource.Controls.Add(this.cbVideoQuality);
             this.tabSource.Controls.Add(this.lblHevcWarning);
+            this.tabSource.Controls.Add(this.chkSoftwareRendering);
+            this.tabSource.Controls.Add(this.lblSoftwareRendering);
             this.tabSource.Controls.Add(this.videoSourceResetButton);
             this.tabSource.Controls.Add(this.lbl_VideoSourceURL);
             this.tabSource.Controls.Add(this.changeVideoSourceText);
@@ -391,7 +395,27 @@
             this.lblHevcWarning.TabIndex = 28;
             this.lblHevcWarning.Text = "HEVC needs the HEVC Video Extensions codec from the Microsoft Store. If video is b" +
     "lack or does not start, switch back to 1080p (H.264).";
-            // 
+            //
+            // chkSoftwareRendering
+            //
+            this.chkSoftwareRendering.AutoSize = true;
+            this.chkSoftwareRendering.Location = new System.Drawing.Point(11, 185);
+            this.chkSoftwareRendering.Name = "chkSoftwareRendering";
+            this.chkSoftwareRendering.Size = new System.Drawing.Size(140, 17);
+            this.chkSoftwareRendering.TabIndex = 29;
+            this.chkSoftwareRendering.Text = "Use software rendering";
+            this.chkSoftwareRendering.UseVisualStyleBackColor = true;
+            //
+            // lblSoftwareRendering
+            //
+            this.lblSoftwareRendering.Location = new System.Drawing.Point(9, 205);
+            this.lblSoftwareRendering.Name = "lblSoftwareRendering";
+            this.lblSoftwareRendering.Size = new System.Drawing.Size(379, 45);
+            this.lblSoftwareRendering.TabIndex = 30;
+            this.lblSoftwareRendering.Text = "Draws video on the CPU instead of the GPU. Try this if video freezes for a few seconds " +
+    "at the start of each clip on some monitors. Uses noticeably more CPU and turns off " +
+    "crossfades.";
+            //
             // videoSourceResetButton
             // 
             this.videoSourceResetButton.Location = new System.Drawing.Point(11, 58);
@@ -505,6 +529,8 @@
         private System.Windows.Forms.Label lblVideoQuality;
         private System.Windows.Forms.ComboBox cbVideoQuality;
         private System.Windows.Forms.Label lblHevcWarning;
+        private System.Windows.Forms.CheckBox chkSoftwareRendering;
+        private System.Windows.Forms.Label lblSoftwareRendering;
         private System.Windows.Forms.ComboBox cbMultiScreenMode;
     }
 }

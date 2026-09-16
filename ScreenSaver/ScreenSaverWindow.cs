@@ -72,8 +72,10 @@ namespace Aerial
             settings = new RegSettings();
 
             // Crossfading runs two decoders at once for a moment. That's cheap at 1080p and not
-            // cheap at 4K HEVC, especially multiplied by monitor count, so skip it there.
-            var enableCrossfade = settings.VideoQuality != RegSettings.VideoQualityEnum.Hevc4k;
+            // cheap at 4K HEVC, especially multiplied by monitor count, so skip it there. Software
+            // rendering would composite both on the CPU, so skip it there too.
+            var enableCrossfade = settings.VideoQuality != RegSettings.VideoQualityEnum.Hevc4k
+                                  && !settings.SoftwareRendering;
 
             surface = new VideoSurface(enableCrossfade, CrossfadeDuration);
             surface.Fatal += OnFatal;
@@ -164,6 +166,11 @@ namespace Aerial
             surface.Start(controller);
         }
 
+        internal void SkipToNext()
+        {
+            if (showVideo) surface.SkipToNext();
+        }
+
         private void OnClosed(object sender, EventArgs e)
         {
             chromeTimer.Stop();
@@ -185,7 +192,8 @@ namespace Aerial
 
             if (e.Key == Key.N)
             {
-                surface.SkipToNext();
+                // Only the focused window receives the key, but every monitor should advance.
+                AerialApp.SkipAllToNext();
                 e.Handled = true;
                 return;
             }
