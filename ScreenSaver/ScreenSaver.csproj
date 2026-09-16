@@ -155,9 +155,6 @@
     <None Include="..\Readme.md">
       <Link>docs\Readme.md</Link>
     </None>
-    <None Include="..\Todo.md">
-      <Link>docs\Todo.md</Link>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="imgs\surfacebook.png" />
