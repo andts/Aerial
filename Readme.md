@@ -7,6 +7,13 @@
 A Windows screen saver that plays the Apple TV aerial videos: cities, landscapes, underwater and
 views from space.
 
+<p align="center">
+<a href="https://github.com/andts/Aerial/releases/latest"><b>⬇ Download the latest version</b></a>
+</p>
+
+On that page, open **Assets** and click the `.zip` file (for example `Aerial-v7.0.0.zip`). Then
+follow [Installation](#installation) below.
+
 This is a fork of [cDima/Aerial](https://github.com/cDima/Aerial), which is no longer maintained.
 Upstream stopped working when Apple retired the video feed it depended on. This fork keeps it a
 small, native `.scr` and brings it back to life:
@@ -37,7 +44,21 @@ on the [Mac Aerial screen saver](https://github.com/JohnCoates/Aerial) by
 
 ## Installation
 
-There are no prebuilt releases for this fork yet, so build it from source:
+1. Go to the **[latest release](https://github.com/andts/Aerial/releases/latest)**. Under
+   **Assets**, click the `Aerial-v….zip` file to download it.
+2. Right-click the downloaded `.zip` and choose **Extract All…**.
+3. Copy `Aerial.scr` and `Aerial.scr.config` from the extracted folder to `C:\Windows`. Windows
+   asks for administrator permission; click **Continue**.
+4. Right-click `Aerial.scr` in `C:\Windows` and choose **Install**. You can also pick **Aerial**
+   under *Settings → Personalization → Lock screen → Screen saver*.
+
+The files are not code-signed, so Windows SmartScreen or your anti-virus may warn about them (see
+[Troubleshooting](#troubleshooting)). To try Aerial without installing, run `Aerial.exe` from the
+extracted folder; it plays in a normal window.
+
+Older versions are on the [releases page](https://github.com/andts/Aerial/releases).
+
+### Building from source
 
 1. Open `ScreenSaver.sln` in Visual Studio with the **.NET desktop development** workload and the
    .NET Framework 4.8 targeting pack (tested with Visual Studio 2026), or build from a Developer
@@ -46,8 +67,7 @@ There are no prebuilt releases for this fork yet, so build it from source:
    msbuild ScreenSaver.sln /p:Configuration=Release
    ```
 2. The build produces `ScreenSaver\bin\Release\Aerial.scr` along with `Aerial.scr.config`.
-3. Copy both files to `C:\Windows`. Then right-click `Aerial.scr` and choose **Install**, or pick
-   **Aerial** under *Settings → Personalization → Lock screen → Screen saver*.
+3. Copy both files to `C:\Windows` and install as described above.
 
 To uninstall, delete `Aerial.scr` and `Aerial.scr.config` from `C:\Windows`. Settings are stored
 in `HKCU\Software\AerialScreenSaver`, and cached videos live in `%LOCALAPPDATA%\Aerial`.
