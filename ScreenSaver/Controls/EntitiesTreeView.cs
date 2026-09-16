@@ -101,9 +101,9 @@ namespace Aerial.Controls
             updatingChecked = false;
         }
 
-        internal string GetUrl(string fullPath)
+        internal string GetUrl(string fullPath, RegSettings.VideoQualityEnum quality)
         {
-            return Movies[fullPath].url;
+            return Movies[fullPath].ResolveUrl(quality);
         }
     }
 }

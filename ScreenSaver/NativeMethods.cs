@@ -16,9 +16,24 @@ namespace Aerial
         public const int WM_LBUTTONDBLCLK = 0x203;
         public const int WM_RBUTTONDOWN = 0x204;
         public const int WM_RBUTTONUP = 0x205;
-        
+        public const int WM_DISPLAYCHANGE = 0x007E;
+        public const int WM_DPICHANGED = 0x02E0;
+
+        public const uint WS_CHILD = 0x40000000;
+        public const uint WS_VISIBLE = 0x10000000;
+
+        public const uint SWP_NOZORDER = 0x0004;
+        public const uint SWP_NOACTIVATE = 0x0010;
+
         [DllImport("kernel32.dll")]
         internal static extern uint SetThreadExecutionState(uint esFlags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter,
+            int X, int Y, int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll")]
+        internal static extern bool IsWindow(IntPtr hWnd);
         
         [DllImport("user32.dll")]
         internal static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
@@ -29,6 +44,9 @@ namespace Aerial
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
+        // Win32 RECT is {left, top, right, bottom} but Rectangle is {x, y, width, height}. That
+        // only lines up because a client rect's top-left is always (0,0), so right/bottom land in
+        // width/height. Correct here; do NOT copy this signature for GetWindowRect.
         [DllImport("user32.dll")]
         internal static extern bool GetClientRect(IntPtr hWnd, out Rectangle lpRect);
         
