@@ -61,6 +61,7 @@
             this.lblHevcWarning = new System.Windows.Forms.Label();
             this.chkSoftwareRendering = new System.Windows.Forms.CheckBox();
             this.lblSoftwareRendering = new System.Windows.Forms.Label();
+            this.btnOpenLogFolder = new System.Windows.Forms.Button();
             this.videoSourceResetButton = new System.Windows.Forms.Button();
             this.lbl_VideoSourceURL = new System.Windows.Forms.Label();
             this.changeVideoSourceText = new System.Windows.Forms.TextBox();
@@ -357,6 +358,7 @@
             this.tabSource.Controls.Add(this.lblHevcWarning);
             this.tabSource.Controls.Add(this.chkSoftwareRendering);
             this.tabSource.Controls.Add(this.lblSoftwareRendering);
+            this.tabSource.Controls.Add(this.btnOpenLogFolder);
             this.tabSource.Controls.Add(this.videoSourceResetButton);
             this.tabSource.Controls.Add(this.lbl_VideoSourceURL);
             this.tabSource.Controls.Add(this.changeVideoSourceText);
@@ -415,6 +417,16 @@
             this.lblSoftwareRendering.Text = "Draws video on the CPU instead of the GPU. Try this if video freezes for a few seconds " +
     "at the start of each clip on some monitors. Uses noticeably more CPU and turns off " +
     "crossfades.";
+            //
+            // btnOpenLogFolder
+            //
+            this.btnOpenLogFolder.Location = new System.Drawing.Point(11, 258);
+            this.btnOpenLogFolder.Name = "btnOpenLogFolder";
+            this.btnOpenLogFolder.Size = new System.Drawing.Size(152, 23);
+            this.btnOpenLogFolder.TabIndex = 31;
+            this.btnOpenLogFolder.Text = "Open Log Folder";
+            this.btnOpenLogFolder.UseVisualStyleBackColor = true;
+            this.btnOpenLogFolder.Click += new System.EventHandler(this.btnOpenLogFolder_Click);
             //
             // videoSourceResetButton
             // 
@@ -531,6 +543,7 @@
         private System.Windows.Forms.Label lblHevcWarning;
         private System.Windows.Forms.CheckBox chkSoftwareRendering;
         private System.Windows.Forms.Label lblSoftwareRendering;
+        private System.Windows.Forms.Button btnOpenLogFolder;
         private System.Windows.Forms.ComboBox cbMultiScreenMode;
     }
 }

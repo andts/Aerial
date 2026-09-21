@@ -218,6 +218,24 @@ namespace ScreenSaver
             Process.Start(Caching.CacheFolder);
         }
 
+        /// <summary>Opens the folder holding aerial.log, so a problem can be reported with it.</summary>
+        private void btnOpenLogFolder_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var folder = Log.FilePath != null
+                    ? Path.GetDirectoryName(Log.FilePath)
+                    : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                                   "Aerial", "logs");
+                Directory.CreateDirectory(folder);
+                Process.Start(folder);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Could not open the log folder: " + ex.Message, "Aerial");
+            }
+        }
+
         private void btnPurgeCache_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("Are you sure you want to delete all cached files?", "Delete Cache?") == DialogResult.OK)

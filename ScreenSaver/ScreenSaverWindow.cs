@@ -157,6 +157,7 @@ namespace Aerial
             if (!showVideo) return;   // black filler window in "main screen only" mode
 
             var movies = AerialContext.GetMovies();
+            Log.Write("playlist has " + movies.Count + " video(s)");
             var controller = new PlaybackController(
                 movies,
                 settings.VideoQuality,
@@ -177,11 +178,12 @@ namespace Aerial
             surface.Stop();
         }
 
-        private void OnFatal(object sender, string message)
+        private void OnFatal(object sender, string summary)
         {
-            // Only one window reports; AerialApp additionally guarantees a single dialog process-wide.
-            if (!isPrimary) return;
-            AerialApp.ShowFatalOnce(this, message);
+            // The surface shows the user its own on-screen panel; nothing modal must appear here.
+            // A MessageBox would block the dispatcher, and with it the retry timer, so the
+            // screensaver could not recover while its own error was on screen.
+            Log.Write((isPrimary ? "primary" : "secondary") + " window persistent failure: " + summary);
         }
 
         // --- input ---------------------------------------------------------------------------
@@ -193,12 +195,17 @@ namespace Aerial
             if (e.Key == Key.N)
             {
                 // Only the focused window receives the key, but every monitor should advance.
+                Log.Write("skip requested (n)");
                 AerialApp.SkipAllToNext();
                 e.Handled = true;
                 return;
             }
 
-            if (!windowMode) AerialApp.Exit();
+            if (!windowMode)
+            {
+                Log.Write("exiting: key " + e.Key);
+                AerialApp.Exit();
+            }
         }
 
         private void OnMouseMove(object sender, MouseEventArgs e)
@@ -223,6 +230,7 @@ namespace Aerial
                 if (Math.Abs(previous.X - screenPoint.X) > MouseMoveThreshold ||
                     Math.Abs(previous.Y - screenPoint.Y) > MouseMoveThreshold)
                 {
+                    Log.Write("exiting: mouse moved from " + previous + " to " + screenPoint);
                     AerialApp.Exit();
                     return;
                 }
@@ -237,6 +245,7 @@ namespace Aerial
 
             if (!windowMode)
             {
+                Log.Write("exiting: " + e.ChangedButton + " mouse button");
                 AerialApp.Exit();
                 return;
             }

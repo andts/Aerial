@@ -21,6 +21,7 @@ mcs -sdk:4.8 -out:"$OUT/PlaybackTests.exe" \
     -resource:"$SRC/Videos.json",Aerial.Videos.json \
     -r:System.Web.Extensions.dll -r:System.Windows.Forms.dll -r:System.Drawing.dll \
     "$SRC/AerialEntities.cs" \
+    "$SRC/Log.cs" \
     "$SRC/Caching.cs" \
     "$SRC/AerialGlobalVars.cs" \
     "$SRC/RegSettings.cs" \

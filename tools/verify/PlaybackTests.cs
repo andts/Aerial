@@ -90,10 +90,10 @@ class PlaybackTests
             var c = New(new List<Asset>());
             Assert(!c.HasPlayableItems, "HasPlayableItems");
             Assert(!c.MoveNext(), "MoveNext should be false");
-            Assert(c.ShouldGiveUp, "ShouldGiveUp");
+            Assert(c.IsFailingPersistently, "IsFailingPersistently");
         });
 
-        Check("a failed remote url is never served again", () =>
+        Check("a failed remote url is skipped while its cooldown lasts", () =>
         {
             var c = New(Playlist(3));
             c.MoveNext();
@@ -106,7 +106,28 @@ class PlaybackTests
             }
         });
 
-        Check("every asset failing terminates instead of spinning", () =>
+        // The bug this guards: blocking used to last the whole process, so every transient
+        // network failure permanently shrank the playlist.
+        Check("a failed url is offered again once its cooldown expires", () =>
+        {
+            var c = New(Playlist(2));
+            c.BlockedRetryAfter = TimeSpan.FromMilliseconds(150);
+            c.MoveNext();
+            var bad = c.CurrentUrl;
+            c.NotifyFailed(bad, PlaybackFailure.LoadFailed);
+
+            System.Threading.Thread.Sleep(300);
+
+            var seenAgain = false;
+            for (var i = 0; i < 4; i++)
+            {
+                c.MoveNext();
+                if (c.CurrentUrl == bad) seenAgain = true;
+            }
+            Assert(seenAgain, "a temporarily blocked url never came back after its cooldown");
+        });
+
+        Check("every asset failing stops MoveNext instead of spinning", () =>
         {
             var c = New(Playlist(3));
             var served = new List<string>();
@@ -117,22 +138,58 @@ class PlaybackTests
                 Assert(served.Count <= 5, "MoveNext kept succeeding past the playlist length");
             }
             Assert(served.Count == 3, "expected 3 attempts, got " + served.Count);
-            Assert(c.ShouldGiveUp, "ShouldGiveUp after all failed");
             Assert(c.CurrentUrl == null, "CurrentUrl should be cleared when exhausted");
         });
 
-        Check("ShouldGiveUp threshold is min(count, GiveUpAfter)", () =>
+        // The bug this guards: an unreachable host fails in ~2s, so ten *instant* failures were
+        // reached about 20 seconds into an outage and ended playback for good.
+        Check("a fast burst of failures is not yet 'persistent'", () =>
         {
             var c = New(Playlist(50));
-            for (var i = 0; i < PlaybackController.GiveUpAfter - 1; i++)
+            for (var i = 0; i < PlaybackController.GiveUpAfter + 5; i++)
             {
                 c.MoveNext();
                 c.NotifyFailed(c.CurrentUrl, PlaybackFailure.LoadFailed);
             }
-            Assert(!c.ShouldGiveUp, "gave up too early at " + c.ConsecutiveFailures);
+            Assert(c.ConsecutiveFailures >= PlaybackController.GiveUpAfter, "streak not counted");
+            Assert(!c.IsFailingPersistently,
+                   "reported a persistent failure after a burst lasting " + c.FailingFor.TotalSeconds + "s");
+        });
+
+        Check("retry delay backs off as failures repeat, and resets on success", () =>
+        {
+            var c = New(Playlist(50));
+            Assert(c.SuggestedRetryDelay == TimeSpan.Zero, "no delay expected before any failure");
+
             c.MoveNext();
             c.NotifyFailed(c.CurrentUrl, PlaybackFailure.LoadFailed);
-            Assert(c.ShouldGiveUp, "should have given up at " + c.ConsecutiveFailures);
+            var first = c.SuggestedRetryDelay;
+            Assert(first > TimeSpan.Zero, "first failure should delay the retry");
+
+            for (var i = 0; i < 5; i++)
+            {
+                c.MoveNext();
+                c.NotifyFailed(c.CurrentUrl, PlaybackFailure.LoadFailed);
+            }
+            Assert(c.SuggestedRetryDelay > first, "delay did not grow");
+            Assert(c.SuggestedRetryDelay <= TimeSpan.FromSeconds(30), "delay grew without a cap");
+
+            c.MoveNext();
+            c.NotifyStarted(c.CurrentUrl);
+            Assert(c.SuggestedRetryDelay == TimeSpan.Zero, "delay not reset after a success");
+        });
+
+        Check("a success clears blocked urls so the playlist recovers", () =>
+        {
+            var c = New(Playlist(3));
+            c.MoveNext();
+            var bad = c.CurrentUrl;
+            c.NotifyFailed(bad, PlaybackFailure.LoadFailed);
+            Assert(c.BlockedCount == 1, "expected 1 blocked, got " + c.BlockedCount);
+
+            c.MoveNext();
+            c.NotifyStarted(c.CurrentUrl);
+            Assert(c.BlockedCount == 0, "a success should clear the blocklist");
         });
 
         Check("a successful start clears the failure streak", () =>
@@ -146,7 +203,8 @@ class PlaybackTests
             c.MoveNext();
             c.NotifyStarted(c.CurrentUrl);
             Assert(c.ConsecutiveFailures == 0, "streak not reset");
-            Assert(!c.ShouldGiveUp, "should not give up after a success");
+            Assert(c.FailingFor == TimeSpan.Zero, "failing-for clock not reset");
+            Assert(!c.IsFailingPersistently, "should not report failure after a success");
         });
 
         Check("a cached copy is preferred over the remote url", () =>
@@ -188,7 +246,7 @@ class PlaybackTests
             finally { if (File.Exists(cached)) File.Delete(cached); }
         });
 
-        Check("failing the remote retry too blocks the clip for good", () =>
+        Check("failing the remote retry too keeps the clip out of rotation", () =>
         {
             var movies = Playlist(3);
             var remote = movies[0].ResolveUrl(RegSettings.VideoQualityEnum.H264_1080p);
@@ -213,6 +271,7 @@ class PlaybackTests
         Check("a stale failure for a preloaded clip doesn't disturb the playing one", () =>
         {
             var c = New(Playlist(4));
+            c.BlockedRetryAfter = TimeSpan.FromMinutes(10);
             c.MoveNext();
             var playing = c.CurrentUrl;     // on screen
             c.MoveNext();

@@ -104,6 +104,7 @@ moving the mouse exits the screen saver.
   - **Video quality**: 1080p H.264, 1080p HEVC or 4K HEVC.
   - **Software rendering**: see Troubleshooting.
   - **Custom catalog URL**: leave it empty to use the built-in catalog.
+  - **Open Log Folder**: opens the folder holding `aerial.log` (see Troubleshooting).
 
 ## Video quality: which to pick
 
@@ -118,10 +119,24 @@ and about 7.8 Mbps for 4K HEVC. All three are SDR. In practice:
 
 ## Troubleshooting
 
-> Black screen or "Aerial could not play any videos" with an HEVC quality selected
+> Black screen, or a message saying Aerial hasn't managed to play a video, with an HEVC quality
+> selected
 
-No 64-bit HEVC decoder is installed. Install one (see Requirements) or switch back to
-1080p (H.264).
+No HEVC decoder is installed for your Windows bitness. Install one (see Requirements) or switch
+back to 1080p (H.264).
+
+> A message appears saying Aerial hasn't managed to play a video for several minutes
+
+Usually the network. Aerial keeps retrying while the message is on screen, waiting longer between
+attempts, and the message disappears by itself as soon as a video plays again. It only appears
+after about three minutes of continuous failure, so short interruptions pass unnoticed. The
+message names the last error; the log has the full history.
+
+> Where is the log?
+
+`%LOCALAPPDATA%\Aerial\logs\aerial.log`, or use **Open Log Folder** on the Video Source tab of
+Settings. It records what played, what failed and why, when Aerial retried, and why it exited.
+It rotates at 1 MB, keeping one previous file as `aerial.log.1`.
 
 > Video freezes for a few seconds right after a clip starts, on one monitor only
 
