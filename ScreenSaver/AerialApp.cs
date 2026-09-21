@@ -20,7 +20,6 @@ namespace Aerial
     internal static class AerialApp
     {
         private static Application app;
-        private static int fatalShown;
 
         private static Application EnsureApp()
         {
@@ -137,18 +136,6 @@ namespace Aerial
             }
         }
 
-        /// <summary>
-        /// Shows an error at most once for the whole process. Without this, a four-monitor setup
-        /// produced four stacked dialogs behind a topmost window.
-        /// </summary>
-        internal static void ShowFatalOnce(Window owner, string message)
-        {
-            if (Interlocked.Exchange(ref fatalShown, 1) != 0) return;
-
-            Trace.WriteLine("Fatal: " + message);
-            MessageBox.Show(owner, message, "Aerial", MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
-
         private static void CreateScreenSaverWindows()
         {
             var mode = new RegSettings().MultiMonitorMode;
@@ -170,6 +157,8 @@ namespace Aerial
 
         private static void Show(Drawing.Rectangle bounds, bool shouldCache, bool showVideo, bool isPrimary)
         {
+            Log.Write("window at " + bounds + (isPrimary ? " (primary)" : "")
+                      + (showVideo ? "" : " (black filler)"));
             var window = new ScreenSaverWindow(bounds, shouldCache, showVideo, isPrimary, windowMode: false);
             window.Show();
         }

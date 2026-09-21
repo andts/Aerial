@@ -32,12 +32,25 @@ namespace Aerial
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            Log.Start(args.Length > 0 ? string.Join(" ", args) : "(no args)");
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                Log.Write("UNHANDLED: " + Log.Describe(e.ExceptionObject as Exception));
+
             Caching.Setup();
             RegSettings.MigrateIfNeeded();
 
+            var startupSettings = new RegSettings();
+            Log.Write("settings: quality " + startupSettings.VideoQuality
+                      + ", multi-monitor " + startupSettings.MultiMonitorMode
+                      + ", cache " + (startupSettings.CacheVideos ? "on" : "off")
+                      + " at " + startupSettings.CacheLocation
+                      + ", software rendering " + (startupSettings.SoftwareRendering ? "on" : "off")
+                      + ", catalog " + (string.IsNullOrWhiteSpace(startupSettings.JsonURL)
+                                        ? "bundled" : startupSettings.JsonURL));
+
             // Process-wide, so it covers every screensaver window, the /p preview and the settings
             // preview alike. Must be set before any WPF window or HwndSource is created.
-            if (new RegSettings().SoftwareRendering)
+            if (startupSettings.SoftwareRendering)
                 System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
 
             if (args.Length > 0)

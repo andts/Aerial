@@ -126,6 +126,7 @@
     <Compile Include="SettingsForm.Designer.cs">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Log.cs" />
     <Compile Include="PlaybackController.cs" />
     <Compile Include="VideoSurface.cs" />
     <Compile Include="ScreenSaverWindow.cs" />
